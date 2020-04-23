@@ -15,3 +15,23 @@ variable "profile" {
     default = "default"
     description = "AWS profile to use to login"
 }
+
+###################
+# Cluster variables
+
+variable "master_port" {
+    type = number
+    default = 1234
+    description = "Port of master node for distributed handshake"
+}
+
+variable "master_ip_addr" {
+    type = string
+    default = "127.0.0.1"
+    description = "IP address of master node for distributed handshake"
+}
+
+variable "my_ip" {
+    type = string
+    description = "Your IP address"
+}
