@@ -1,6 +1,6 @@
 provider "aws" {
     region  = var.aws_region
-    version = "~> 2.0"
+    version = "~> 2.8"
     shared_credentials_file = var.credentials
     profile                 = var.profile
 }
