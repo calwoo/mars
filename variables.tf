@@ -15,3 +15,12 @@ variable "profile" {
     default = "default"
     description = "AWS profile to use to login"
 }
+
+variable "s3_state_bucket" {
+    description = "S3 bucket to store Terraform state"
+}
+
+variable "s3_state_key" {
+    default = "terraform.tfstate"
+    description = "Key for stored Terraform state in backend"
+}
