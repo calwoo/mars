@@ -5,3 +5,6 @@
 
 # terraform variables
 *.tfvars
+
+# deprecated
+cluster_DEPR.tf
