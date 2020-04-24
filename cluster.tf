@@ -41,17 +41,74 @@ resource "aws_security_group" "ec2-master" {
 
     # Jupyter notebook access
     ingress {
-      from_port = 8888
-      to_port = 8888
-      protocol = "tcp"
-      cidr_blocks = [ "${var.my_ip}/32" ]
+        from_port = 8888
+        to_port = 8888
+        protocol = "tcp"
+        cidr_blocks = [ "${var.my_ip}/32" ]
     }
 
-    # Git access
+    # HTTP access (for Git)
+    egress {
+        from_port = 80
+        to_port = 80
+        protocol = "tcp"
+        cidr_blocks = [ "0.0.0.0/0" ]
+    }
+
+    # HTTPS access (for Git)
+    egress {
+        from_port = 443
+        to_port = 443
+        protocol = "tcp"
+        cidr_blocks = [ "0.0.0.0/0" ]
+    }
+
+    # master <-> worker
     ingress {
-      from_port = 0
-      to_port = 0
-      protocol = "-1"
-      cidr_blocks = [ "${var.my_ip}/32" ]
+        from_port = var.worker_port
+        to_port = var.master_port
+        protocol = "tcp"
+    }
+}
+
+resource "aws_security_group" "ec2-worker" {
+    name = "ec2-cluster-node"
+    description = "Cluster worker communication with master node"
+    vpc_id = aws_vpc.main.id
+
+    # HTTP access (for Git)
+    egress {
+        from_port = 80
+        to_port = 80
+        protocol = "tcp"
+        cidr_blocks = [ "0.0.0.0/0" ]
+    }
+
+    # HTTPS access (for Git)
+    egress {
+        from_port = 443
+        to_port = 443
+        protocol = "tcp"
+        cidr_blocks = [ "0.0.0.0/0" ]
+    }
+
+    # master <-> worker
+    ingress {
+        from_port = var.master_port
+        to_port = var.worker_port
+        protocol = "tcp"
+    }
+
+    # worker <-> worker
+    egress {
+        from_port = var.worker_port
+        to_port = var.worker_port
+        protocol = "tcp"
+    }
+
+    ingress {
+        from_port = var.worker_port
+        to_port = var.worker_port
+        protocol = "tcp"
     }
 }

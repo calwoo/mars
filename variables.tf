@@ -31,6 +31,12 @@ variable "master_ip_addr" {
     description = "IP address of master node for distributed handshake"
 }
 
+variable "worker_port" {
+    type = number
+    default = 1235
+    description = "Port of worker nodes for distributed handshake"
+}
+
 variable "my_ip" {
     type = string
     description = "Your IP address"
