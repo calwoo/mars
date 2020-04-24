@@ -9,8 +9,8 @@ terraform {
   }
 }
 
-###################
-# Cluster instances
+#################
+# Cluster network
 
 resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/16"
@@ -22,6 +22,14 @@ resource "aws_vpc" "main" {
     description = "VPC for cluster"
   }
 }
+
+resource "aws_subnet" "main_subnet" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.0.0/16"
+  map_public_ip_on_launch = true
+}
+
+
 
 
 
@@ -43,5 +51,21 @@ resource "aws_security_group" "ec2-cluster-sg" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["${var.my_ip}/32"]
+  }
+
+  # HTTP access (for Git)
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["${aws_subnet.main_subnet}"]
+  }
+
+  # HTTPS access (for Git)
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["${aws_subnet.main_subnet}"]
   }
 }
