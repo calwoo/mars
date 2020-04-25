@@ -41,3 +41,29 @@ variable "my_ip" {
   type        = string
   description = "Your IP address"
 }
+
+####################
+# Instance variables
+
+variable "instance_ami" {
+  type        = string
+  default     = "ami-085925f297f89fce1"
+  description = "Default AMI for EC2 nodes"
+}
+
+variable "spot_price" {
+  type        = number
+  default     = 0.5
+  description = "Maximum spot price for EC2 request"
+}
+
+variable "instance_type" {
+  type        = string
+  default     = "t2.micro"
+  description = "Instance type of the cluster nodes"
+}
+
+variable "key_name" {
+  type = string
+  description = "Key to use to access AWS EC2 instances"
+}

@@ -45,7 +45,43 @@ resource "aws_default_route_table" "main_route_table" {
 ###################
 # Cluster instances
 
+resource "aws_spot_instance_request" "ec2-master" {
+  ami                         = var.instance_ami
+  instance_type               = var.instance_type
+  spot_price                  = var.spot_price
+  wait_for_fullfillment       = true
+  key_name                    = var.key_name
+  vpc_security_group_ids      = [aws_security_group.ec2-cluster-sg.id]
+  subnet_id                   = aws_subnet.main_subnet.id
+  associate_public_ip_address = true
 
+  tags = {
+    name        = "ec2-master"
+    description = "Master node of cluster"
+  }
+}
+
+resource "aws_launch_template" "ec2-worker" {
+  instance_type = var.instance_type
+  image_id      = var.instance_ami
+  key_name      = var.key_name
+
+  monitoring {
+    enabled = true
+  }
+
+  network_interfaces {
+    associate_public_ip_address = true
+    delete_on_termination       = true
+    security_groups             = [aws_security_group.ec2-cluster-sg.id]
+    subnet_id                   = aws_subnet.main_subnet.id
+  }
+
+  tags = {
+    name        = "ec2-worker-tpl"
+    description = "Launch template for EC2 worker nodes"
+  }
+}
 
 
 
