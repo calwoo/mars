@@ -18,7 +18,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  tags {
+  tags = {
     description = "VPC for cluster"
   }
 }
@@ -49,7 +49,7 @@ resource "aws_spot_instance_request" "ec2-master" {
   ami                         = var.instance_ami
   instance_type               = var.instance_type
   spot_price                  = var.spot_price
-  wait_for_fullfillment       = true
+  wait_for_fulfillment        = true
   key_name                    = var.key_name
   vpc_security_group_ids      = [aws_security_group.ec2-cluster-sg.id]
   subnet_id                   = aws_subnet.main_subnet.id
@@ -85,6 +85,9 @@ resource "aws_launch_template" "ec2-worker" {
 
 
 
+
+
+
 #########################
 # Cluster security groups
 
@@ -106,7 +109,7 @@ resource "aws_security_group" "ec2-cluster-sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["${aws_subnet.main_subnet}"]
+    cidr_blocks = [aws_subnet.main_subnet.cidr_block]
   }
 
   # HTTPS access (for Git)
@@ -114,6 +117,6 @@ resource "aws_security_group" "ec2-cluster-sg" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = ["${aws_subnet.main_subnet}"]
+    cidr_blocks = [aws_subnet.main_subnet.cidr_block]
   }
 }
