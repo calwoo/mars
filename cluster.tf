@@ -83,9 +83,41 @@ resource "aws_launch_template" "ec2-worker" {
   }
 }
 
+resource "aws_autoscaling_group" "ec2-cluster-asg" {
+  min_size         = 1
+  max_size         = var.max_workers
+  desired_capacity = var.n_workers
 
+  vpc_zone_identifier = [aws_subnet.main_subnet.id]
 
+  mixed_instances_policy {
+    instances_distribution {
+      on_demand_base_capacity  = 1
+      spot_allocation_strategy = "lowest-price"
+      spot_max_price           = var.spot_price
+    }
 
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.ec2-worker.id
+        version            = aws_launch_template.ec2-worker.latest_version
+      }
+    }
+  }
+
+  tags = [
+    {
+      key                 = "name"
+      value               = "ec2-worker"
+      propagate_at_launch = true
+    },
+    {
+      key                 = "description"
+      value               = "A single node on the EC2 cluster"
+      propagate_at_launch = true
+    }
+  ]
+}
 
 
 #########################

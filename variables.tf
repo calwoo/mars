@@ -64,6 +64,18 @@ variable "instance_type" {
 }
 
 variable "key_name" {
-  type = string
+  type        = string
   description = "Key to use to access AWS EC2 instances"
+}
+
+variable "max_workers" {
+  type        = number
+  default     = 3
+  description = "Max number of worker nodes to launch"
+}
+
+variable "n_workers" {
+  type        = number
+  default     = 1
+  description = "Number of worker nodes to launch"
 }
