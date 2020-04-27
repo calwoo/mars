@@ -47,7 +47,7 @@ variable "my_ip" {
 
 variable "instance_ami" {
   type        = string
-  default     = "ami-085925f297f89fce1"
+  default     = "ami-0f6127e61a87f8677"
   description = "Default AMI for EC2 nodes"
 }
 

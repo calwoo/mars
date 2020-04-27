@@ -1,7 +1,15 @@
-output "worker_instance_ips" {
+output "master_ip" {
+    value = aws_spot_instance_request.ec2-master.public_ip
+}
+
+output "worker_instance_public_ips" {
     value = data.aws_instances.cluster.public_ips
 }
 
+output "worker_instance_private_ips" {
+    value = data.aws_instances.cluster.private_ips
+}
+
 output "master-ssh" {
-    value = "ssh -i \"~/.ssh/${var.key_name}\" -L 8000:localhost:8888 ec2-user@${aws_spot_instance_request.ec2-master.public_ip}"
+    value = "ssh -i \"~/.ssh/${var.key_name}.pem\" ubuntu@${aws_spot_instance_request.ec2-master.public_ip}"
 }
