@@ -55,6 +55,7 @@ resource "aws_spot_instance_request" "ec2-master" {
   subnet_id                   = aws_subnet.main_subnet.id
   associate_public_ip_address = true
 
+  user_data = data.template_file.master.rendered
   tags = {
     name        = "ec2-master"
     description = "Master node of cluster"
@@ -76,6 +77,8 @@ resource "aws_launch_template" "ec2-worker" {
     security_groups             = [aws_security_group.ec2-cluster-sg.id]
     subnet_id                   = aws_subnet.main_subnet.id
   }
+
+  user_data = base64encode(data.template_file.worker.rendered)
 
   tags = {
     name        = "ec2-worker-tpl"
@@ -119,6 +122,12 @@ resource "aws_autoscaling_group" "ec2-cluster-asg" {
   ]
 }
 
+data "aws_instances" "cluster" {
+  filter {
+    name   = "instance.group-id"
+    values = [aws_security_group.ec2-cluster-sg.id]
+  }
+}
 
 #########################
 # Cluster security groups
@@ -144,11 +153,25 @@ resource "aws_security_group" "ec2-cluster-sg" {
     cidr_blocks = [aws_subnet.main_subnet.cidr_block]
   }
 
+  egress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # HTTPS access (for Git)
   ingress {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = [aws_subnet.main_subnet.cidr_block]
+  }
+
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
