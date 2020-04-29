@@ -34,4 +34,5 @@ fi
 # Create terraform artifacts
 echo "Creating terraform artifacts..."
 terraform output -json | jq .master_public_ip.value > ./artifacts/master_public.txt
+terraform output -json | jq .master_private_ip.value > ./artifacts/master_private.txt
 terraform output -json | jq .worker_instance_public_ips.value[] > ./artifacts/worker_public.txt
