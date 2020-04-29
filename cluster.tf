@@ -108,6 +108,8 @@ resource "aws_autoscaling_group" "ec2-cluster-asg" {
     }
   }
 
+  depends_on = [aws_spot_instance_request.ec2-master]
+
   tags = [
     {
       key                 = "name"
@@ -126,6 +128,11 @@ data "aws_instances" "cluster" {
   filter {
     name   = "instance.group-id"
     values = [aws_security_group.ec2-cluster-sg.id]
+  }
+
+  filter {
+    name   = "tag:name"
+    values = ["ec2-worker"]
   }
 
   depends_on = [

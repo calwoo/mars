@@ -10,6 +10,16 @@ variable "credentials" {
   description = "AWS access keys to use to login"
 }
 
+variable "aws_access_key" {
+  type        = string
+  description = "AWS access key"
+}
+
+variable "aws_secret_key" {
+  type        = string
+  description = "AWS secret access key"
+}
+
 variable "profile" {
   type        = string
   default     = "default"
@@ -18,6 +28,11 @@ variable "profile" {
 
 ###################
 # Cluster variables
+
+variable "cluster_image" {
+  type        = string
+  description = "Docker image to be used on cluster nodes"
+}
 
 variable "master_port" {
   type        = number

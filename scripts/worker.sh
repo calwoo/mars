@@ -12,6 +12,8 @@ python get-pip.py --user
 ~/.local/bin/pip install awscli --upgrade --user
 
 echo "Logging in to ECS registry..."
-export AWS_SHARED_CREDENTIALS_FILE=${AWS_CREDENTIALS}
+export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY}
+export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_KEY}
+export AWS_DEFAULT_REGION=${AWS_REGION}
 $(~/.local/bin/aws ecr get-login --no-include-email)
 echo "Logged in!"

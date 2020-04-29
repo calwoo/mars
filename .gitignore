@@ -8,3 +8,7 @@
 
 # deprecated
 *.tf_BACKUP
+
+# test
+test/
+artifacts/
