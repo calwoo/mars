@@ -12,3 +12,7 @@
 # test
 test/
 artifacts/
+
+# test environment
+terra-env/
+.vscode/

@@ -1,5 +1,9 @@
-output "master_ip" {
+output "master_public_ip" {
     value = aws_spot_instance_request.ec2-master.public_ip
+}
+
+output "master_private_ip" {
+    value = aws_spot_instance_request.ec2-master.private_ip
 }
 
 output "worker_instance_public_ips" {

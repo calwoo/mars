@@ -4,7 +4,7 @@
 
 if ! [ -x "$(command -v terraform)" ]; then
     # Installs terraform if it doesn't exist
-    if [[ "$OSTYPE" == "linux-gnu"]]; then
+    if [[ "$OSTYPE" == "linux-gnu" ]]; then
         echo "Linux detected... installing terraform"
         wget -v -O /tmp/tf.zip \
             https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
@@ -22,5 +22,16 @@ if ! [ -x "$(command -v terraform)" ]; then
     terraform version
 fi
 
+echo "Initializing EC2 cluster..."
 terraform init
 terraform apply -auto-approve
+
+if ! [ -d "./artifacts/" ]; then
+    echo "Created directory for terraform artifacts"
+    mkdir ./artifacts/
+fi
+
+# Create terraform artifacts
+echo "Creating terraform artifacts..."
+terraform output -json | jq .master_public_ip.value > ./artifacts/master_public.txt
+terraform output -json | jq .worker_instance_public_ips.value[] > ./artifacts/worker_public.txt

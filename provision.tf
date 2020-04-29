@@ -1,5 +1,5 @@
 data "template_file" "master" {
-  template = file("scripts/master.sh")
+  template = file("${path.module}/scripts/master.sh")
   vars = {
     AWS_ACCESS_KEY = var.aws_access_key
     AWS_SECRET_KEY = var.aws_secret_key
@@ -13,7 +13,7 @@ data "template_file" "master" {
 }
 
 data "template_file" "worker" {
-  template = file("scripts/worker.sh")
+  template = file("${path.module}/scripts/worker.sh")
   vars = {
     AWS_ACCESS_KEY = var.aws_access_key
     AWS_SECRET_KEY = var.aws_secret_key
