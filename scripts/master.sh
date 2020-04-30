@@ -21,20 +21,20 @@ export AWS_DEFAULT_REGION=${AWS_REGION}
 $(~/.local/bin/aws ecr get-login --no-include-email)
 echo "Logged in!"
 
+# Extract number of GPUs on instance
+echo "Getting number of GPUs..."
+apt-get install jq
+
+# get xml2json repo from git
+sudo git clone https://github.com/Cheedoong/xml2json.git /opt/x2j
+cd /opt/x2j; sudo make; cd -
+export NUM_GPUS=$(nvidia-smi -x -q | /opt/x2j/xml2json | jq .nvidia_smi_log.attached_gpus)
+
 echo "Loading docker image..."
-if [ ${GPU_HOST} -eq 0 ]; then
-    docker run -i -t -d \
-        --network host \
-        -e MASTER_PORT=${MASTER_PORT} \
-        -e WORKER_PORT=${WORKER_PORT} \
-        -e NUM_NODES=${NUM_NODES} \
-        ${CLUSTER_IMAGE}
-else
-    docker run -it \
-        --network host \
-        --gpus all \
-        -e MASTER_PORT=${MASTER_PORT} \
-        -e WORKER_PORT=${WORKER_PORT} \
-        -e NUM_NODES=${NUM_NODES} \
-        ${CLUSTER_IMAGE}
-fi
+docker run -i -d \
+    --network host \
+    $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "--gpus all") \
+    -e MASTER_PORT=${MASTER_PORT} \
+    -e WORKER_PORT=${WORKER_PORT} \
+    -e NUM_NODES=${NUM_NODES} \
+    ${CLUSTER_IMAGE}

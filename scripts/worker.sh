@@ -17,3 +17,11 @@ export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_KEY}
 export AWS_DEFAULT_REGION=${AWS_REGION}
 $(~/.local/bin/aws ecr get-login --no-include-email)
 echo "Logged in!"
+
+echo "Loading docker image..."
+docker run -i -d \
+    --network host \
+    $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "--gpus all") \
+    -e MASTER_PORT=${MASTER_PORT} \
+    -e MASTER_ADDR=${MASTER_ADDR} \
+    ${CLUSTER_IMAGE}

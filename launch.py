@@ -7,11 +7,11 @@ cluster.
 
 import argparse
 import logging
-import multiprocessing as mp
 import os
 import shutil
 import sys
 from functools import partial
+from concurrent.futures import ThreadPoolExecutor
 
 from fabric import Connection
 from fabric.group import Group, ThreadingGroup
@@ -39,7 +39,7 @@ def pytorch_launch_cmd(n_nodes=1, node_rank=0, n_gpus=1, master_ip="127.0.0.1",
     :return str: Launch command to be SSHed over
     """
 
-    if training_script is None:
+    if training_path is None:
         raise ValueError("No training script provided")
 
     training_argus = []
@@ -150,21 +150,25 @@ if __name__ == "__main__":
     n_nodes = len(cluster_public_ips)
     n_gpus = 1
 
-    logger.info("Launching distributed training job...")
-    with mp.Pool(processes=n_nodes) as pool:
-        def mp_wrap(node_rank, conn):
-            cmd = pytorch_launch_cmd(n_nodes=n_nodes,
-                                     node_rank=node_rank
-                                     n_gpus=n_gpus,
-                                     master_ip=cluster_info["master_pvt"],
-                                     master_port=args.master_port,
-                                     training_path="test.py",
-                                     training_args={
-                                         "lr": 0.001,
-                                         "batch-size": 128
-                                     })
-            return conn.run(cmd)
+    def mp_wrap(tup):
+        node_rank, conn = tup
+        cmd = pytorch_launch_cmd(n_nodes=n_nodes,
+                                 node_rank=node_rank,
+                                 n_gpus=n_gpus,
+                                 master_ip=cluster_info["master_pvt"],
+                                 master_port=args.master_port,
+                                 training_path="test.py",
+                                 training_args={
+                                     "lr": 0.001,
+                                     "batch-size": 128
+                                 })
+        
+        logger.info(f"Running job on node {node_rank}...")
+        return conn.run(cmd)
 
+    logger.info("Launching distributed training job...")
+
+    with ThreadPoolExecutor(max_workers=n_nodes) as pool:
         _ = pool.map(mp_wrap, cluster_conns.items())
 
     logger.info("Distributed training is over.")
