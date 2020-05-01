@@ -19,9 +19,12 @@ $(~/.local/bin/aws ecr get-login --no-include-email)
 echo "Logged in!"
 
 echo "Loading docker image..."
-docker run -i -d \
+docker run -it -d \
     --network host \
     $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "--gpus all") \
     -e MASTER_PORT=${MASTER_PORT} \
     -e MASTER_ADDR=${MASTER_ADDR} \
+    $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "-e NUM_GPUS=$${NUM_GPUS}") \
+    --name cluster_img \
+    -v /opt:/opt \
     ${CLUSTER_IMAGE}

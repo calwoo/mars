@@ -10,9 +10,9 @@
 *.tf_BACKUP
 
 # test
-test/
 artifacts/
 
 # test environment
 terra-env/
 .vscode/
+test/data/

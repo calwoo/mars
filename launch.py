@@ -84,6 +84,35 @@ def load_artifacts(artifact_path):
 
     return cluster_arts
 
+# Wrapped fabric Connection object-- commands are run through a docker exec over SSH
+class DConnection:
+    """
+    Wrapper for the paramiko/fabric Connection object. This automatically pushes
+    any command pushed to SSH through to the specified Docker image running on the
+    container.
+
+    :param str image: Alias of the Docker image (local name on remote) to remote into
+    :param - kwargs: Remaining parameters the same as in fabric
+    """
+
+    def __init__(self, image, **kwargs):
+        self._conn = Connection(**kwargs)
+        self._image = image
+
+    def run(self, cmd, docker=False):
+        """
+        Runs a command remotely via SSH
+
+        :param str cmd: Command to run
+        :param bool docker: Run docker exec?
+        """
+        
+        if docker:
+            docker_cmd = f"docker exec {self._image} {cmd}"
+            return self._conn.run(docker_cmd)
+        else:
+            return self._conn.run(cmd)
+
 # Pull a git repo/branch onto remote servers
 def pull(conn, repo, branch="master", local=True):
     """
@@ -92,8 +121,10 @@ def pull(conn, repo, branch="master", local=True):
     :param conn: Paramiko/fabric SSH connection object
     :param str repo: Git repository to clone
     :param str branch: Specific branch to clone
-    :param bool local: Are credentials be local or on remote?
+    :param bool local: Are credentials local or on remote?
     """
+
+
 
     if local:
         # check if a git-credentials file exists
@@ -122,6 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("-k", "--key", required=True, help="Location of ssh key for EC2 instances")
     parser.add_argument("-a", "--artifacts", required=True, help="Location of cluster artifacts")
     parser.add_argument("-p", "--master-port", default=1234, help="Port on master node for distributed handshakes")
+    parser.add_argument("-i", "--image", default="cluster_img", help="Docker image alias on remote machine")
     parser.add_argument("--username", default="ubuntu", help="Username on cluster nodes")
 
     args = parser.parse_args()
@@ -136,35 +168,39 @@ if __name__ == "__main__":
 
     # Establish SSH connections
     logger.info("Establishing SSH connections to cluster nodes...")
-    cluster_conns = {rank: Connection(host=host,
-                                      user=args.username,
-                                      connect_kwargs={
-                                          "key_filename": args.key
-                                      })
-                                      for rank, host in cluster_public_ips.items()
+    cluster_conns = {rank: DConnection(args.image,
+                                       host=host,
+                                       user=args.username,
+                                       connect_kwargs={
+                                           "key_filename": args.key
+                                       })
+                                       for rank, host in cluster_public_ips.items()
                     }
 
-    # pull(conn, "medivo/uwmodels", branch="cwoo-embeddings")
+    # Pull from repo from github
+    for rank, dconn in cluster_conns.items():
+        pull(dconn._conn, "medivo/uwmodels", branch="cwoo-embeddings")
     
     # Run torch.distributed.launch commands all at once
     n_nodes = len(cluster_public_ips)
-    n_gpus = 1
+    n_gpus = "$NUM_GPUS"
 
     def mp_wrap(tup):
         node_rank, conn = tup
-        cmd = pytorch_launch_cmd(n_nodes=n_nodes,
-                                 node_rank=node_rank,
-                                 n_gpus=n_gpus,
-                                 master_ip=cluster_info["master_pvt"],
-                                 master_port=args.master_port,
-                                 training_path="test.py",
-                                 training_args={
-                                     "lr": 0.001,
-                                     "batch-size": 128
-                                 })
+        # cmd = pytorch_launch_cmd(n_nodes=n_nodes,
+        #                          node_rank=node_rank,
+        #                          n_gpus=n_gpus,
+        #                          master_ip=cluster_info["master_pvt"],
+        #                          master_port=args.master_port,
+        #                          training_path="test.py",
+        #                          training_args={
+        #                              "lr": 0.001,
+        #                              "batch-size": 128
+        #                          })
         
+        cmd = f"echo \"hello from {node_rank}\""
         logger.info(f"Running job on node {node_rank}...")
-        return conn.run(cmd)
+        return conn.run(cmd, docker=True)
 
     logger.info("Launching distributed training job...")
 

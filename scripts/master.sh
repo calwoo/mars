@@ -31,10 +31,13 @@ cd /opt/x2j; sudo make; cd -
 export NUM_GPUS=$(nvidia-smi -x -q | /opt/x2j/xml2json | jq .nvidia_smi_log.attached_gpus)
 
 echo "Loading docker image..."
-docker run -i -d \
+docker run -it -d \
     --network host \
     $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "--gpus all") \
     -e MASTER_PORT=${MASTER_PORT} \
     -e WORKER_PORT=${WORKER_PORT} \
     -e NUM_NODES=${NUM_NODES} \
+    $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "-e NUM_GPUS=$${NUM_GPUS}") \
+    --name cluster_img \
+    -v /opt:/opt \
     ${CLUSTER_IMAGE}
