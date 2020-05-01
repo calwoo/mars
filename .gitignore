@@ -16,3 +16,4 @@ artifacts/
 terra-env/
 .vscode/
 test/data/
+__pycache__
