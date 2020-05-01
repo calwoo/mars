@@ -1,6 +1,7 @@
 import argparse
 import os
 import logging
+from tqdm import tqdm
 
 import torch
 import torch.distributed as distr
@@ -13,7 +14,11 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torch.nn.parallel import DistributedDataParallel as DDP
-from tqdm import tqdm
+
+from ignite.contrib.handlers import ProgressBar
+from ignite.engine import Engine, Events
+from ignite.handlers import Timer
+from ignite.metrics import RunningAverage
 
 from nets import DNet, GNet
 from utils import get_CIFAR10_data
@@ -70,4 +75,67 @@ if __name__ == "__main__":
     optimizer_g = torch.optim.Adam(gnet.parameters(), lr=args.lr, betas=(0.1, 0.999))
     optimizer_d = torch.optim.Adam(dnet.parameters(), lr=args.lr, betas=(0.1, 0.999))
 
-    
+    def update(engine, batch):
+        imgs, _ = batch
+        imgs = imgs.to(device)
+
+        # train discriminator
+        optimizer_d.zero_grad()
+
+        y_real = dnet.forward(imgs)
+        real_labels_d = torch.ones(args.batch_size).to(device)
+        loss_dreal = loss_fn(y_real, real_labels_d)
+
+        z_noise = torch.randn(args.batch_size, args.z_dim, 1, 1).to(device)
+        fake_imgs = gnet.forward(z_noise)
+        y_fake = dnet.forward(fake_imgs.detach())
+        fake_labels_d = torch.zeros(args.batch_size).to(device)
+        loss_dfake = loss_fn(y_fake, fake_labels_d)
+
+        loss_d = loss_dreal + loss_dfake
+        loss_d.backward()
+        optimizer_d.step()
+
+        # train generator
+        optimizer_g.zero_grad()
+
+        y_fake_g = dnet.forward(fake_imgs)
+        fake_labels_g = torch.ones(args.batch_size).to(device)
+
+        loss_g = loss_fn(y_fake_g, fake_labels_g)
+        loss_g.backward()
+        optimizer_g.step()
+
+        return {"loss_d": loss_d.item(), "loss_g": loss_g.item()}
+
+    logger.info("Constructing training engine...")
+    engine = Engine(update)
+    timer = Timer(average=True)
+
+    timer.attach(engine,
+                 start=Events.EPOCH_STARTED,
+                 resume=Events.ITERATION_STARTED,
+                 pause=Events.ITERATION_COMPLETED,
+                 step=Events.ITERATION_COMPLETED)
+
+    ### TRAINING
+    # Attach metrics
+    metrics = ["loss_d", "loss_g"]
+    RunningAverage(alpha=0.98, output_transform=lambda x: x["loss_d"]).attach(engine, "loss_d")
+    RunningAverage(alpha=0.98, output_transform=lambda x: x["loss_g"]).attach(engine, "loss_g")
+
+    pbar = ProgressBar()
+    pbar.attach(engine, metric_names=metrics)
+
+    @engine.on(Events.EPOCH_COMPLETED)
+    def log_times(engine):
+        pbar.log_message(
+            "Epoch {} finished: Batch average time is {:.3f}".format(engine.state.epoch, timer.value()))
+        timer.reset()
+
+    # Initiate training
+    logger.info("Starting training!")
+    engine.run(dloader, args.epochs)
+
+    logger.info("Training complete!")
+
