@@ -1,6 +1,7 @@
 import argparse
 import os
 import logging
+import shutil
 from tqdm import tqdm
 
 import torch
@@ -16,6 +17,7 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from ignite.contrib.handlers import ProgressBar
+from ignite.contrib.handlers.mlflow_logger import MLflowLogger, OutputHandler
 from ignite.engine import Engine, Events
 from ignite.handlers import Timer
 from ignite.metrics import RunningAverage
@@ -30,6 +32,7 @@ logger.setLevel(logging.INFO)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--data", type=str, default="data/", help="Path to folder where data is stored/downloaded")
+    parser.add_argument("-L", "--logs", type=str, default="/tmp/log/", help="Directory where logs are stored")
     parser.add_argument("--n-workers", type=int, default=4, help="Number of workers for dataloader")
     parser.add_argument("--batch-size", type=int, default=128, help="Batch size for input")
     parser.add_argument("--z-dim", type=int, default=100, help="Latent space dimension")
@@ -55,13 +58,14 @@ if __name__ == "__main__":
     dset = get_CIFAR10_data(args.data)
     
     # Set (distributed) dataloader
-    dsampler = DistributedSampler(dset,) if distributed else None
+    dsampler = DistributedSampler(dset) if distributed else None
     dloader = DataLoader(dataset=dset,
                          batch_size=args.batch_size,
                          shuffle=(dsampler is None),
                          sampler=dsampler,
                          num_workers=args.n_workers,
-                         pin_memory=True)
+                         pin_memory=True,
+                         drop_last=True)
 
     ### MODEL
     N_CHANNEL = 3
@@ -69,6 +73,20 @@ if __name__ == "__main__":
     # Set DCGAN model
     gnet = GNet(z_dim=args.z_dim, n_filter=args.n_filter, n_channel=N_CHANNEL)
     dnet = DNet(n_filter=args.n_filter, n_channel=N_CHANNEL)
+
+    # Initialize tensorboard
+    if os.path.exists(args.logs):
+        shutil.rmtree(args.logs)
+
+    if args.local_rank <= 0:
+        mlflow_logger = MLflowLogger()
+        mlflow_logger.log_params({
+            "distributed": distributed,
+            "batch_size": args.batch_size,
+            "z_dim": args.z_dim,
+            "n_filter": args.n_filter,
+            "learning_rate": args.lr
+        })
 
     # Set loss function and optimizer
     loss_fn = nn.BCELoss()
@@ -124,18 +142,31 @@ if __name__ == "__main__":
     RunningAverage(alpha=0.98, output_transform=lambda x: x["loss_d"]).attach(engine, "loss_d")
     RunningAverage(alpha=0.98, output_transform=lambda x: x["loss_g"]).attach(engine, "loss_g")
 
-    pbar = ProgressBar()
-    pbar.attach(engine, metric_names=metrics)
+    if args.local_rank <= 0:
+        pbar = ProgressBar()
+        pbar.attach(engine, metric_names=metrics)
 
-    @engine.on(Events.EPOCH_COMPLETED)
-    def log_times(engine):
-        pbar.log_message(
-            "Epoch {} finished: Batch average time is {:.3f}".format(engine.state.epoch, timer.value()))
-        timer.reset()
+        mlflow_logger.attach(engine,
+                             log_handler=OutputHandler(tag="generator/loss",
+                                                       metric_names=["loss_g"]),
+                             event_name=Events.ITERATION_COMPLETED(every=10))
+        mlflow_logger.attach(engine,
+                             log_handler=OutputHandler(tag="discriminator/loss",
+                                                       metric_names=["loss_d"]),
+                             event_name=Events.ITERATION_COMPLETED(every=10))
+
+        @engine.on(Events.EPOCH_COMPLETED)
+        def log_times(engine):
+            pbar.log_message(
+                "Epoch {} finished: Batch average time is {:.3f}".format(engine.state.epoch, timer.value()))
+            timer.reset()
 
     # Initiate training
     logger.info("Starting training!")
     engine.run(dloader, args.epochs)
 
     logger.info("Training complete!")
+
+    if distributed:
+        distr.barrier()
 

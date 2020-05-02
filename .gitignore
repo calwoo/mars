@@ -17,3 +17,4 @@ terra-env/
 .vscode/
 test/data/
 __pycache__
+mlruns/
