@@ -29,9 +29,14 @@ variable "profile" {
 ###################
 # Cluster variables
 
-variable "cluster_image" {
+variable "master_image" {
   type        = string
-  description = "Docker image to be used on cluster nodes"
+  description = "Docker image to be used on cluster master node"
+}
+
+variable "worker_image" {
+  type        = string
+  description = "Docker image to be used on cluster worker node"
 }
 
 variable "master_port" {

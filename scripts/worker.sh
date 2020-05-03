@@ -6,6 +6,9 @@ set -xe
 # from https://aws.amazon.com/premiumsupport/knowledge-center/ec2-linux-log-user-data/
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
+echo "Updating..."
+apt-get update
+
 echo "Installing pip..."
 curl -O https://bootstrap.pypa.io/get-pip.py
 python get-pip.py --user
@@ -18,13 +21,22 @@ export AWS_DEFAULT_REGION=${AWS_REGION}
 $(~/.local/bin/aws ecr get-login --no-include-email)
 echo "Logged in!"
 
+# Extract number of GPUs on instance
+echo "Getting number of GPUs..."
+apt-get install jq
+
+# get xml2json repo from git
+sudo git clone https://github.com/Cheedoong/xml2json.git /opt/x2j
+cd /opt/x2j; sudo make; cd -
+export NUM_GPUS=$(nvidia-smi -x -q | /opt/x2j/xml2json | jq .nvidia_smi_log.attached_gpus)
+
 echo "Loading docker image..."
 docker run -it -d \
     --network host \
     $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "--gpus all") \
+    $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "-e NUM_GPUS=$${NUM_GPUS}") \
     -e MASTER_PORT=${MASTER_PORT} \
     -e MASTER_ADDR=${MASTER_ADDR} \
-    $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "-e NUM_GPUS=$${NUM_GPUS}") \
     --name cluster_img \
     -v /opt:/opt \
-    ${CLUSTER_IMAGE}
+    ${NODE_IMAGE}

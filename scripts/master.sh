@@ -34,10 +34,10 @@ echo "Loading docker image..."
 docker run -it -d \
     --network host \
     $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "--gpus all") \
+    $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "-e NUM_GPUS=$${NUM_GPUS}") \
     -e MASTER_PORT=${MASTER_PORT} \
     -e WORKER_PORT=${WORKER_PORT} \
     -e NUM_NODES=${NUM_NODES} \
-    $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "-e NUM_GPUS=$${NUM_GPUS}") \
     --name cluster_img \
     -v /opt:/opt \
-    ${CLUSTER_IMAGE}
+    ${NODE_IMAGE}
