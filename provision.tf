@@ -24,3 +24,13 @@ data "template_file" "worker" {
     MASTER_ADDR    = aws_spot_instance_request.ec2-master.private_ip
   }
 }
+
+data "template_file" "init" {
+  template = file("${path.module}/scripts/init.sh")
+  vars = {
+    AWS_ACCESS_KEY = var.aws_access_key
+    AWS_SECRET_KEY = var.aws_secret_key
+    AWS_REGION     = var.aws_region
+    GPU_HOST       = contains(["p", "g"], lower(substr(var.instance_type, 0, 1))) ? 1 : 0
+  }
+}
