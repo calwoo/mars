@@ -10,7 +10,8 @@
         },
         {
             "name": "dnotebook",
-            "image": "daskdev/dask-notebook:latest"
+            "image": "daskdev/dask-notebook:latest",
+            "notebook": "true"
         }
     ]
 }

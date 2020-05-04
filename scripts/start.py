@@ -15,7 +15,7 @@ import sys
 logger = logging.getLogger("init")
 logger.setLevel(logging.INFO)
 
-def run_docker_cmd(config, gpu=False, num_gpus=0):
+def run_docker_cmd(config, gpu=False, num_gpus=0, nb_pass=None):
     # log into ECR
     sp.run("$(~/.local/bin/aws ecr get-login --no-include-email)", 
            shell=True, 
@@ -30,6 +30,10 @@ def run_docker_cmd(config, gpu=False, num_gpus=0):
 
         for var, val in config["env"].items():
             cmd += ["-e", f"{var}={val}"]
+
+        # if notebook image, set password
+        if "notebook" in img_config and bool(img_config["notebook"]):
+            cmd += ["-e", f"JUPYTER_PASSWORD={nb_pass}"]
         
         cmd += ["--name", f"{img_config['name']}"]
         cmd.append(str(img_config["image"]))
@@ -48,6 +52,7 @@ if __name__ == "__main__":
     parser.add_argument("--aws-default-region", type=str, default="us-east-1", help="AWS default region")
     parser.add_argument("--gpu", type=int, default=0, help="GPU instance?")
     parser.add_argument("--num-gpus", type=int, default=0, help="Number of GPUs on EC2 instance")
+    parser.add_argument("--nb-pass", type=str, default=None, help="Jupyter notebook password")
     parser.add_argument("--role", type=str, required=True, help="Role-- master or worker?")
 
     args = parser.parse_args()
@@ -75,4 +80,4 @@ if __name__ == "__main__":
     if isinstance(config["images"], dict):
         config["images"] = [config["images"]]
 
-    run_docker_cmd(config, gpu=args.gpu, num_gpus=args.num_gpus)
+    run_docker_cmd(config, gpu=args.gpu, num_gpus=args.num_gpus, nb_pass=args.nb_pass)

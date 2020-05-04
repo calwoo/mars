@@ -50,4 +50,5 @@ python3 /opt/init/start.py \
     --aws-default-region ${AWS_REGION} \
     --gpu ${GPU_HOST} \
     $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "--num-gpus $${NUM_GPUS}") \
+    $([ ${ROLE} -eq "master" ] && echo "--nb-pass ${NB_PASS}" || echo "") \
     --role ${ROLE}
