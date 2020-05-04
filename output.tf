@@ -17,3 +17,7 @@ output "worker_instance_private_ips" {
 output "master-ssh" {
     value = "ssh -i \"~/.ssh/${var.key_name}.pem\" ubuntu@${aws_spot_instance_request.ec2-master.public_ip}"
 }
+
+output "notebook-login" {
+    value = random_password.nb_password.result
+}

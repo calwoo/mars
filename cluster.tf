@@ -68,6 +68,8 @@ resource "aws_spot_instance_request" "ec2-master" {
       if [ ! -d artifacts ]; then mkdir artifacts; fi
       echo ${self.public_ip} > artifacts/master_public.txt
       echo ${self.private_ip} > artifacts/master_private.txt
+      > artifacts/worker_public.txt
+      > artifacts/worker_private.txt
     EOT
   }
 
@@ -91,7 +93,7 @@ resource "aws_spot_instance_request" "ec2-master" {
   }
 
   provisioner "file" {
-    content     = data.template_file.init.rendered
+    content     = data.template_file.master_init.rendered
     destination = "/tmp/init/init.sh"
   }
 
@@ -127,7 +129,13 @@ resource "aws_launch_template" "ec2-worker" {
     subnet_id                   = aws_subnet.main_subnet.id
   }
 
-  user_data = base64encode(data.template_file.worker.rendered)
+  # # Provisioning: first, grab IPs from node creation...
+  # provisioner "local-exec" {
+  #   command = <<EOT
+  #     echo ${self.public_ip} >> artifacts/worker_public.txt
+  #     echo ${self.private_ip} >> artifacts/worker_private.txt
+  #   EOT
+  # }
 
   tags = {
     name        = "ec2-worker-tpl"

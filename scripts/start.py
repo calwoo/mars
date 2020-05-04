@@ -24,6 +24,8 @@ def run_docker_cmd(config, gpu=False, num_gpus=0, nb_pass=None):
 
     for img_config in config["images"]:
         cmd = ["docker", "run", "-it", "-d", "--network", "host"]
+        cmd += ["-v", "/opt:/opt"]
+
         if gpu:
             cmd += ["--gpus", "all"]
             cmd += ["-e", f"NUM_GPUS={num_gpus}"]
