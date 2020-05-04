@@ -72,9 +72,37 @@ resource "aws_spot_instance_request" "ec2-master" {
   }
 
   # ...then push config files to instance...
+  provisioner "remote-exec" {
+    inline = [
+      "mkdir /tmp/config/",
+      "mkdir /tmp/init/"
+    ]
+  }
+
   provisioner "file" {
-    source      = "config/${var.cluster_type}"
-    destination = "/opt"
+    source      = "config/${var.cluster_type}/"
+    destination = "/tmp/config"
+  }
+
+  # ...and initialization scripts...
+  provisioner "file" {
+    source      = "scripts/"
+    destination = "/tmp/init"
+  }
+
+  provisioner "file" {
+    content     = data.template_file.init.rendered
+    destination = "/tmp/init/init.sh"
+  }
+
+  # ...finally, run initialization.
+  provisioner "remote-exec" {
+    inline = [
+      "sudo cp -r /tmp/config /opt/config",
+      "sudo cp -r /tmp/init /opt/init",
+      "chmod +x /opt/init/init.sh",
+      "/opt/init/init.sh"
+    ]
   }
 
   tags = {
