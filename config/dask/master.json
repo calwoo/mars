@@ -1,5 +1,16 @@
 {
     "env": {
-        "MASTER_PORT": 1234
-    }
+        "MASTER_PORT": 8786
+    },
+    "images": [
+        {
+            "name": "dscheduler",
+            "image": "daskdev/dask:latest",
+            "command": "dask-scheduler"
+        },
+        {
+            "name": "dnotebook",
+            "image": "daskdev/dask-notebook:latest"
+        }
+    ]
 }

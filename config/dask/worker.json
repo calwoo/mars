@@ -1,0 +1,10 @@
+{
+    "env": {
+        "MASTER_PORT": 8786
+    },
+    "images": {
+        "name": "dworker",
+        "image": "daskdev/dask:latest",
+        "command": "dask-worker tcp://${MASTER_ADDR}:${MASTER_PORT}"
+    }
+}
