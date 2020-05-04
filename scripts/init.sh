@@ -36,7 +36,7 @@ echo "Running initialization script..."
 python3 /opt/init/start.py \
     --aws-access-key ${AWS_ACCESS_KEY} \
     --aws-secret-key ${AWS_SECRET_KEY} \
-    --aws-default-region ${AWS_DEFAULT_REGION} \
+    --aws-default-region ${AWS_REGION} \
     --gpu ${GPU_HOST} \
     $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "--num-gpus $${NUM_GPUS}") \
     --role ${ROLE}

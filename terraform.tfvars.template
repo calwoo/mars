@@ -1,0 +1,11 @@
+my_ip        = <your IP here>
+key_name     = <your SSH login key>
+cluster_type = "dask"
+master_image = "daskdev/dask-notebook:latest"
+worker_image = "daskdev/dask:latest"
+
+aws_access_key = <AWS access key>
+aws_secret_key = <AWS secret key>
+
+n_workers     = 1
+instance_type = "t2.micro"

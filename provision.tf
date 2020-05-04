@@ -32,5 +32,6 @@ data "template_file" "init" {
     AWS_SECRET_KEY = var.aws_secret_key
     AWS_REGION     = var.aws_region
     GPU_HOST       = contains(["p", "g"], lower(substr(var.instance_type, 0, 1))) ? 1 : 0
+    ROLE           = "master"
   }
 }

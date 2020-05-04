@@ -26,6 +26,11 @@ variable "profile" {
   description = "AWS profile to use to login"
 }
 
+variable "key_file" {
+  type        = string
+  description = "Location of private SSH key used to login to EC2 instances"
+}
+
 ###################
 # Cluster variables
 
@@ -60,6 +65,11 @@ variable "worker_port" {
 variable "my_ip" {
   type        = string
   description = "Your IP address"
+}
+
+variable "cluster_type" {
+  type        = string
+  description = "Type of cluster to be created (types are enumerated in the config folder)"
 }
 
 ####################

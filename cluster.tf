@@ -55,7 +55,28 @@ resource "aws_spot_instance_request" "ec2-master" {
   subnet_id                   = aws_subnet.main_subnet.id
   associate_public_ip_address = true
 
-  user_data = data.template_file.master.rendered
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file(var.key_file)
+    host        = self.public_ip
+  }
+
+  # Provisioning: first, grab IPs from node creation...
+  provisioner "local-exec" {
+    command = <<EOT
+      if [ ! -d artifacts ]; then mkdir artifacts; fi
+      echo ${self.public_ip} > artifacts/master_public.txt
+      echo ${self.private_ip} > artifacts/master_private.txt
+    EOT
+  }
+
+  # ...then push config files to instance...
+  provisioner "file" {
+    source      = "config/${var.cluster_type}"
+    destination = "/opt"
+  }
+
   tags = {
     name        = "ec2-master"
     description = "Master node of cluster"
