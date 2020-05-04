@@ -88,7 +88,7 @@ resource "aws_spot_instance_request" "ec2-master" {
 
   # ...and initialization scripts...
   provisioner "file" {
-    source      = "scripts/"
+    source      = "scripts/master/"
     destination = "/tmp/init"
   }
 
