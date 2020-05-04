@@ -54,10 +54,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     logger.info(f"Initializing {args.role} node...")
 
-    # CONFIG_PATH = "/opt/config/"
-    # INIT_PATH   = "/opt/init/"
-    CONFIG_PATH = "../config/dask/"
-    INIT_PATH   = "./"
+    CONFIG_PATH = "/opt/config/"
+    INIT_PATH   = "/opt/init/"
 
     ### Initialize
     # Extract config JSON -> dict
@@ -78,4 +76,3 @@ if __name__ == "__main__":
         config["images"] = [config["images"]]
 
     run_docker_cmd(config, gpu=args.gpu, num_gpus=args.num_gpus)
-    

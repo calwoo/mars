@@ -98,10 +98,10 @@ resource "aws_spot_instance_request" "ec2-master" {
   # ...finally, run initialization.
   provisioner "remote-exec" {
     inline = [
+      "sudo chmod +x /tmp/init/init.sh",
       "sudo cp -r /tmp/config /opt/config",
       "sudo cp -r /tmp/init /opt/init",
-      "chmod +x /opt/init/init.sh",
-      "/opt/init/init.sh"
+      "sudo /opt/init/init.sh"
     ]
   }
 
