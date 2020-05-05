@@ -24,7 +24,6 @@ def run_docker_cmd(config, gpu=False, num_gpus=0, nb_pass=None):
 
     for img_config in config["images"]:
         cmd = ["docker", "run", "-it", "-d", "--network", "host"]
-        cmd += ["-v", "/opt:/opt"]
 
         if gpu:
             cmd += ["--gpus", "all"]
@@ -38,6 +37,8 @@ def run_docker_cmd(config, gpu=False, num_gpus=0, nb_pass=None):
             cmd += ["-e", f"JUPYTER_PASSWORD={nb_pass}"]
         
         cmd += ["--name", f"{img_config['name']}"]
+        # cmd += ["-v", "/opt:/opt"]
+
         cmd.append(str(img_config["image"]))
 
         if "command" in img_config:
