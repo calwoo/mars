@@ -167,6 +167,12 @@ resource "aws_autoscaling_group" "ec2-cluster-asg" {
 
   depends_on = [aws_spot_instance_request.ec2-master]
 
+  provisioner "local-exec" {
+    command = <<EOT
+      echo {self.id} > artifacts/asg_id.txt
+    EOT
+  }
+
   tags = [
     {
       key                 = "name"

@@ -31,6 +31,11 @@ variable "key_file" {
   description = "Location of private SSH key used to login to EC2 instances"
 }
 
+variable "config_s3_bucket" {
+  type        = string
+  description = "S3 bucket where cluster configs are stored"
+}
+
 ###################
 # Cluster variables
 
