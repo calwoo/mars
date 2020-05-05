@@ -30,6 +30,8 @@ $(~/.local/bin/aws ecr get-login --no-include-email)
 echo "Logged in!"
 
 echo "Extracting config files from S3..."
+
+
 ~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${ASG_ID}/config/ /opt/config --recursive
 ~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${ASG_ID}/init/ /opt/init --recursive
 ~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${ASG_ID}/artifacts/ /opt/artifacts --recursive

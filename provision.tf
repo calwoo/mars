@@ -17,7 +17,7 @@ data "template_file" "worker_init" {
     AWS_SECRET_KEY   = var.aws_secret_key
     AWS_REGION       = var.aws_region
     CONFIG_S3_BUCKET = var.config_s3_bucket
-    ASG_ID           = aws_autoscaling_group.ec2-cluster-asg.id
+    ASG_ID           = aws_spot_instance_request.ec2-master.id
     GPU_HOST         = contains(["p", "g"], lower(substr(var.instance_type, 0, 1))) ? 1 : 0
     NB_PASS          = random_password.nb_password.result
     ROLE             = "worker"

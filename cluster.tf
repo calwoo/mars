@@ -129,7 +129,7 @@ resource "aws_launch_template" "ec2-worker" {
     subnet_id                   = aws_subnet.main_subnet.id
   }
 
-  
+  user_data = base64encode(data.template_file.worker_init.rendered)
 
   tags = {
     name        = "ec2-worker-tpl"
@@ -164,9 +164,9 @@ resource "aws_autoscaling_group" "ec2-cluster-asg" {
   provisioner "local-exec" {
     command = <<EOT
       echo ${self.id} > artifacts/asg_id.txt
-      aws s3 cp config/${var.cluster_type}/ s3://${var.config_s3_bucket}/mars/${self.id}/config --recursive
-      aws s3 cp scripts/worker/ s3://${var.config_s3_bucket}/mars/${self.id}/init --recursive
-      aws s3 cp artifacts/ s3://${var.config_s3_bucket}/mars/${self.id}/artifacts --recursive
+      aws s3 cp config/${var.cluster_type}/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/config --recursive
+      aws s3 cp scripts/worker/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/init --recursive
+      aws s3 cp artifacts/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/artifacts --recursive
     EOT
   }
 
