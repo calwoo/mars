@@ -70,6 +70,9 @@ if __name__ == "__main__":
     with open(os.path.abspath(os.path.join(CONFIG_PATH, f"{args.role}.json")), "r") as f:
         config = json.load(f)
 
+    # Set Jupyter notebook pass variable
+    os.environ["JUPYTER_PASSWORD"] = str(args.nb_pass)
+
     # Set environment variables
     logger.info("=> Setting environment variables...")
     for var, value in config["env"].items():
