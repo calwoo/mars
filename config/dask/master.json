@@ -11,6 +11,7 @@
         {
             "name": "dnotebook",
             "image": "daskdev/dask-notebook:latest",
+            "command": "start-notebook.sh --NotebookApp.token='${JUPYTER_PASSWORD}'",
             "notebook": "true"
         }
     ]

@@ -47,8 +47,10 @@ if [ ${GPU_HOST} -eq 0 ]; then
     export NUM_GPUS=$(nvidia-smi -x -q | /opt/x2j/xml2json | jq .nvidia_smi_log.attached_gpus)
 fi
 
-echo "Setting permissions on docker..."
-sudo chown ubuntu:ubuntu /home/ubuntu/.docker -R
+if [ -d "/home/ubuntu/.docker/" ]; then
+    echo "Setting permissions on docker..."
+    sudo chown ubuntu:ubuntu /home/ubuntu/.docker -R
+fi
 
 echo "Running initialization script..."
 python3 /opt/init/start.py \

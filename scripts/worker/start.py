@@ -44,8 +44,10 @@ def run_docker_cmd(config, gpu=False, num_gpus=0, nb_pass=None):
         if "command" in img_config:
             cmd.append(str(img_config["command"]))
 
+        run_env = os.environ.copy()
+
         # load docker image
-        sp.run(cmd)
+        sp.run(cmd, env=run_env)
 
 
 if __name__ == "__main__":
@@ -74,7 +76,7 @@ if __name__ == "__main__":
     if args.role == "worker":
         # Get master address
         with open(os.path.abspath(os.path.join(ARTIFACTS_PATH, "master_private.txt")), "r") as f:
-            master_ip_addr = str(f.lines()[0])
+            master_ip_addr = str(f.read())
             os.environ["MASTER_ADDR"] = master_ip_addr
 
     # Set environment variables
