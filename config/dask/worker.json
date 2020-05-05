@@ -5,6 +5,6 @@
     "images": {
         "name": "dworker",
         "image": "daskdev/dask:latest",
-        "command": "dask-worker tcp://${MASTER_ADDR}:${MASTER_PORT}"
+        "command": "dask-worker tcp://${MASTER_ADDR}:8786"
     }
 }

@@ -129,13 +129,7 @@ resource "aws_launch_template" "ec2-worker" {
     subnet_id                   = aws_subnet.main_subnet.id
   }
 
-  # # Provisioning: first, grab IPs from node creation...
-  # provisioner "local-exec" {
-  #   command = <<EOT
-  #     echo ${self.public_ip} >> artifacts/worker_public.txt
-  #     echo ${self.private_ip} >> artifacts/worker_private.txt
-  #   EOT
-  # }
+  
 
   tags = {
     name        = "ec2-worker-tpl"
@@ -169,7 +163,10 @@ resource "aws_autoscaling_group" "ec2-cluster-asg" {
 
   provisioner "local-exec" {
     command = <<EOT
-      echo {self.id} > artifacts/asg_id.txt
+      echo ${self.id} > artifacts/asg_id.txt
+      aws s3 cp config/${var.cluster_type}/ s3://${var.config_s3_bucket}/mars/${self.id}/config --recursive
+      aws s3 cp scripts/worker/ s3://${var.config_s3_bucket}/mars/${self.id}/init --recursive
+      aws s3 cp artifacts/ s3://${var.config_s3_bucket}/mars/${self.id}/artifacts --recursive
     EOT
   }
 
