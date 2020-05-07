@@ -1,0 +1,35 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Update apt-cache
+      apt:
+        update_cache: yes
+
+    - name: Install core applications
+      apt:
+        name:
+          - build-essential
+          - gcc
+          - jq
+        state: latest
+        autoclean: yes
+
+    - name: Check if pip exists
+      register: pip_installed
+      command: pip --version
+      ignore_errors: true
+
+    - name: Else, install pip
+      when: pip_installed|failed
+      get_url:
+        url: https://bootstrap.pypa.io/get-pip.py
+        dest: /tmp/get-pip.py
+        mode: "preserve"
+      
+    - name: Continue installing pip
+      shell: python3 get-pip.py --user
+
+    - name: Install awscli
+      pip:
+        name: awscli==1.18.54

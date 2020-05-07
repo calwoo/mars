@@ -1,0 +1,33 @@
+---
+- name: Dask notebook on master
+  when: inventory_hostname in groups['master']
+  docker_container:
+    name: dnotebook
+    image: daskdev/dask-notebook:latest
+    command: start_notebook.sh
+    network_mode: host
+    detach: yes
+    interactive: yes
+    tty: yes
+
+- name: Dask scheduler on master
+  when: inventory_hostname in groups['master']
+  docker_container:
+    name: dscheduler
+    image: daskdev/dask:latest
+    command: dask-scheduler
+    network_mode: host
+    detach: yes
+    interactive: yes
+    tty: yes
+
+- name: Dask worker
+  when: inventory_hostname in groups['workers']
+  docker_container:
+    name: dworker
+    image: daskdev/dask:latest
+    command: "dask-worker tcp://{{ master_private_ip }}:8786"
+    network_mode: host
+    detach: yes
+    interactive: yes
+    tty: yes

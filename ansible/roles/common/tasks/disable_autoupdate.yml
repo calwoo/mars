@@ -1,0 +1,24 @@
+---
+- name: Stop automatic (unattended) updates
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - apt-daily.timer
+    - apt-daily.service
+    - apt-daily-upgrade.timer
+    - apt-daily-upgrade.service
+    
+- name: Disable automatic (unattended) updates
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - apt-daily.timer
+    - apt-daily.service
+    - apt-daily-upgrade.timer
+    - apt-daily-upgrade.service
+
+- name: Configure dpkg
+  shell: dpkg --configure -a
+  become: yes
