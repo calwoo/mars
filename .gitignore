@@ -19,3 +19,5 @@ test/data/
 __pycache__
 mlruns/
 key/
+ansible/inventory
+ansible/playbook.retry

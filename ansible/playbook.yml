@@ -3,5 +3,6 @@
   become: true
   roles:
     - common
+    - dask
   vars:
-    - master_private_ip: {{ hostvars[groups['master'][0]]['ansible_eth0']['ipv4']['address'] }}
+    - master_private_ip: "{{ hostvars[groups['master'][0]]['ansible_eth0']['ipv4']['address'] }}"

@@ -62,59 +62,59 @@ resource "aws_spot_instance_request" "ec2-master" {
     host        = self.public_ip
   }
 
-  # Provisioning: first, grab IPs from node creation...
-  provisioner "local-exec" {
-    command = <<EOT
-      if [ ! -d key ]; then mkdir key; fi
-      ssh-keygen -t rsa -N "" -f key/ec2_key
-      chmod 600 key/ec2_key
-      if [ ! -d artifacts ]; then mkdir artifacts; fi
-      echo ${self.id} > artifacts/master_id.txt
-      echo ${self.public_ip} > artifacts/master_public.txt
-      echo ${self.private_ip} > artifacts/master_private.txt
-      > artifacts/worker_public.txt
-      > artifacts/worker_private.txt
-    EOT
-  }
+  # # Provisioning: first, grab IPs from node creation...
+  # provisioner "local-exec" {
+  #   command = <<EOT
+  #     if [ ! -d key ]; then mkdir key; fi
+  #     ssh-keygen -t rsa -N "" -f key/ec2_key
+  #     chmod 600 key/ec2_key
+  #     if [ ! -d artifacts ]; then mkdir artifacts; fi
+  #     echo ${self.id} > artifacts/master_id.txt
+  #     echo ${self.public_ip} > artifacts/master_public.txt
+  #     echo ${self.private_ip} > artifacts/master_private.txt
+  #     > artifacts/worker_public.txt
+  #     > artifacts/worker_private.txt
+  #   EOT
+  # }
 
-  # ...then push config files to instance...
-  provisioner "remote-exec" {
-    inline = [
-      "mkdir /tmp/config/",
-      "mkdir /tmp/init/"
-    ]
-  }
+  # # ...then push config files to instance...
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "mkdir /tmp/config/",
+  #     "mkdir /tmp/init/"
+  #   ]
+  # }
 
-  provisioner "file" {
-    source      = "key/"
-    destination = "~/.ssh"
-  }
+  # provisioner "file" {
+  #   source      = "key/"
+  #   destination = "~/.ssh"
+  # }
 
-  provisioner "file" {
-    source      = "config/${var.cluster_type}/"
-    destination = "/tmp/config"
-  }
+  # provisioner "file" {
+  #   source      = "config/${var.cluster_type}/"
+  #   destination = "/tmp/config"
+  # }
 
-  # ...and initialization scripts...
-  provisioner "file" {
-    source      = "scripts/master/"
-    destination = "/tmp/init"
-  }
+  # # ...and initialization scripts...
+  # provisioner "file" {
+  #   source      = "scripts/master/"
+  #   destination = "/tmp/init"
+  # }
 
-  provisioner "file" {
-    content     = data.template_file.master_init.rendered
-    destination = "/tmp/init/init.sh"
-  }
+  # provisioner "file" {
+  #   content     = data.template_file.master_init.rendered
+  #   destination = "/tmp/init/init.sh"
+  # }
 
-  # ...finally, run initialization.
-  provisioner "remote-exec" {
-    inline = [
-      "sudo chmod +x /tmp/init/init.sh",
-      "sudo cp -r /tmp/config /opt/config",
-      "sudo cp -r /tmp/init /opt/init",
-      "sudo /opt/init/init.sh"
-    ]
-  }
+  # # ...finally, run initialization.
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "sudo chmod +x /tmp/init/init.sh",
+  #     "sudo cp -r /tmp/config /opt/config",
+  #     "sudo cp -r /tmp/init /opt/init",
+  #     "sudo /opt/init/init.sh"
+  #   ]
+  # }
 
   tags = {
     name        = "ec2-master"
@@ -138,7 +138,7 @@ resource "aws_launch_template" "ec2-worker" {
     subnet_id                   = aws_subnet.main_subnet.id
   }
 
-  user_data = base64encode(data.template_file.worker_init.rendered)
+  # user_data = base64encode(data.template_file.worker_init.rendered)
 
   tags = {
     name        = "ec2-worker-tpl"
@@ -170,15 +170,15 @@ resource "aws_autoscaling_group" "ec2-cluster-asg" {
 
   depends_on = [aws_spot_instance_request.ec2-master]
 
-  provisioner "local-exec" {
-    command = <<EOT
-      echo ${self.id} > artifacts/asg_id.txt
-      aws s3 cp key/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/key --recursive
-      aws s3 cp config/${var.cluster_type}/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/config --recursive
-      aws s3 cp scripts/worker/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/init --recursive
-      aws s3 cp artifacts/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/artifacts --recursive
-    EOT
-  }
+  # provisioner "local-exec" {
+  #   command = <<EOT
+  #     echo ${self.id} > artifacts/asg_id.txt
+  #     aws s3 cp key/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/key --recursive
+  #     aws s3 cp config/${var.cluster_type}/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/config --recursive
+  #     aws s3 cp scripts/worker/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/init --recursive
+  #     aws s3 cp artifacts/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/artifacts --recursive
+  #   EOT
+  # }
 
   tags = [
     {

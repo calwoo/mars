@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+figlet mars cluster
+
 ### Run script for an EC2 cluster (possible GPU-enabled). 
 
 if ! [ -x "$(command -v terraform)" ]; then
@@ -23,7 +25,7 @@ if ! [ -x "$(command -v terraform)" ]; then
 fi
 
 echo "Initializing EC2 cluster..."
-terraform init
+terraform init > /dev/null
 terraform apply -auto-approve
 
 if ! [ -d "./artifacts/" ]; then
@@ -43,7 +45,21 @@ cat <<EOT >> ./ansible/inventory
 [mars:children]
 master
 workers
+
 [mars:vars]
 ansible_ssh_user=ubuntu
 ansible_ssh_private_key_file=$1
 EOT
+
+figlet provisioning...
+
+export ANSIBLE_CONFIG=./ansible/ansible.cfg
+
+ansible-playbook ./ansible/playbook.yml \
+    --private-key $1 \
+    --inventory-file ./ansible/inventory \
+    --forks 4 \
+    --user ubuntu \
+    --timeout 300
+
+figlet ready!
