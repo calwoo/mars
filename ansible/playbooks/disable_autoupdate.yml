@@ -1,0 +1,8 @@
+---
+- hosts: all
+  remote_user: root
+  tasks:
+    - name: Disable automatic (unattended) updates
+      systemd:
+        name: apt-daily{,-upgrade}.{timer,service}
+        state: stopped

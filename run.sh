@@ -33,8 +33,17 @@ fi
 
 # Create terraform artifacts
 echo "Creating terraform artifacts..."
-terraform output -json | jq .master_public_ip.value > ./artifacts/master_public.txt
-terraform output -json | jq .master_private_ip.value > ./artifacts/master_private.txt
-terraform output -json | jq .worker_instance_public_ips.value[] > ./artifacts/worker_public.txt
+echo "[master]" > ./ansible/inventory
+terraform output -json | jq -r .master_public_ip.value >> ./ansible/inventory
+echo -e "\n[workers]" >> ./ansible/inventory
+terraform output -json | jq -r .worker_instance_public_ips.value[] >> ./ansible/inventory
 
-terraform output
+echo -e "\n" >> ./ansible/inventory
+cat <<EOT >> ./ansible/inventory
+[mars:children]
+master
+workers
+[mars:vars]
+ansible_ssh_user=ubuntu
+ansible_ssh_private_key_file=$1
+EOT
