@@ -30,11 +30,10 @@ $(~/.local/bin/aws ecr get-login --no-include-email)
 echo "Logged in!"
 
 echo "Extracting config files from S3..."
-
-
-~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${ASG_ID}/config/ /opt/config --recursive
-~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${ASG_ID}/init/ /opt/init --recursive
-~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${ASG_ID}/artifacts/ /opt/artifacts --recursive
+~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${MASTER_NODE_ID}/key/ ~/.ssh --recursive
+~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${MASTER_NODE_ID}/config/ /opt/config --recursive
+~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${MASTER_NODE_ID}/init/ /opt/init --recursive
+~/.local/bin/aws s3 cp s3://${CONFIG_S3_BUCKET}/mars/${MASTER_NODE_ID}/artifacts/ /opt/artifacts --recursive
 
 if [ ${GPU_HOST} -eq 0 ]; then
     # Extract number of GPUs on instance
@@ -59,5 +58,5 @@ python3 /opt/init/start.py \
     --aws-default-region ${AWS_REGION} \
     --gpu ${GPU_HOST} \
     $([ ${GPU_HOST} -eq 0 ] && echo "" || echo "--num-gpus $${NUM_GPUS}") \
-    $([ ${ROLE} -eq "master" ] && echo "--nb-pass ${NB_PASS}" || echo "") \
+    $([ ${ROLE} = "master" ] && echo "--nb-pass ${NB_PASS}" || echo "") \
     --role ${ROLE}

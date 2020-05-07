@@ -65,7 +65,11 @@ resource "aws_spot_instance_request" "ec2-master" {
   # Provisioning: first, grab IPs from node creation...
   provisioner "local-exec" {
     command = <<EOT
+      if [ ! -d key ]; then mkdir key; fi
+      ssh-keygen -t rsa -N "" -f key/ec2_key
+      chmod 600 key/ec2_key
       if [ ! -d artifacts ]; then mkdir artifacts; fi
+      echo ${self.id} > artifacts/master_id.txt
       echo ${self.public_ip} > artifacts/master_public.txt
       echo ${self.private_ip} > artifacts/master_private.txt
       > artifacts/worker_public.txt
@@ -79,6 +83,11 @@ resource "aws_spot_instance_request" "ec2-master" {
       "mkdir /tmp/config/",
       "mkdir /tmp/init/"
     ]
+  }
+
+  provisioner "file" {
+    source      = "key/"
+    destination = "~/.ssh"
   }
 
   provisioner "file" {
@@ -164,6 +173,7 @@ resource "aws_autoscaling_group" "ec2-cluster-asg" {
   provisioner "local-exec" {
     command = <<EOT
       echo ${self.id} > artifacts/asg_id.txt
+      aws s3 cp key/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/key --recursive
       aws s3 cp config/${var.cluster_type}/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/config --recursive
       aws s3 cp scripts/worker/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/init --recursive
       aws s3 cp artifacts/ s3://${var.config_s3_bucket}/mars/${aws_spot_instance_request.ec2-master.id}/artifacts --recursive
