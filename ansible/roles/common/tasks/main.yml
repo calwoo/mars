@@ -1,5 +1,10 @@
 ---
-- import_tasks: disable_autoupdate.yml
+- name: Wait for SSH to be established
+  wait_for_connection:
+    timeout: 300
+
+- name: Disable autoupdates
+  script: disable_autoupdate.sh
 
 - name: Update apt-cache
   apt:
@@ -7,7 +12,7 @@
 
 - name: Install core applications
   apt:
-    pkgs:
+    name:
       - build-essential
       - gcc
       - jq
@@ -20,15 +25,22 @@
   ignore_errors: true
 
 - name: Else, install pip
-  when: pip_installed|failed
+  when: pip_installed is failed
   get_url:
     url: https://bootstrap.pypa.io/get-pip.py
     dest: /tmp/get-pip.py
     mode: "preserve"
   
 - name: Continue installing pip
+  when: pip_installed is failed
   shell: python3 get-pip.py --user
 
 - name: Install awscli
   pip:
+    executable: pip3
     name: awscli==1.18.54
+
+- name: Install Docker SDK
+  pip:
+    executable: pip3
+    name: docker==4.2.0

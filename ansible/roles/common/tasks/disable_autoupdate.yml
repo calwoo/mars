@@ -1,23 +1,32 @@
 ---
-- name: Stop automatic (unattended) updates
-  systemd:
-    name: "{{ item }}"
-    state: stopped
-  with_items:
-    - apt-daily.timer
-    - apt-daily.service
-    - apt-daily-upgrade.timer
-    - apt-daily-upgrade.service
+# - name: Stop automatic (unattended) updates
+#   systemd:
+#     name: "{{ item }}"
+#     state: stopped
+#   with_items:
+#     - apt-daily.timer
+#     - apt-daily.service
+#     - apt-daily-upgrade.timer
+#     - apt-daily-upgrade.service
     
 - name: Disable automatic (unattended) updates
-  systemd:
-    name: "{{ item }}"
-    state: stopped
-  with_items:
-    - apt-daily.timer
-    - apt-daily.service
-    - apt-daily-upgrade.timer
-    - apt-daily-upgrade.service
+  shell: |
+    systemctl disable --now apt-daily.timer
+    systemctl disable --now apt-daily.service
+    systemctl disable --now apt-daily-upgrade.timer
+    systemctl disable --now apt-daily-upgrade.service
+  become: yes
+
+- name: Wait for any updates to finish
+  command: systemd-run --property="After=apt-daily.service apt-daily-upgrade.service" --wait /bin/true
+  become: yes
+
+- name: Remove lock files
+  shell: |
+    rm /var/lib/apt/lists/lock
+    rm /var/lib/dpkg/lock
+    rm /var/lib/dpkg/lock-frontend
+  become: yes
 
 - name: Configure dpkg
   shell: dpkg --configure -a

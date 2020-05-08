@@ -36,9 +36,9 @@ fi
 # Create terraform artifacts
 echo "Creating terraform artifacts..."
 echo "[master]" > ./ansible/inventory
-terraform output -json | jq -r .master_public_ip.value >> ./ansible/inventory
+terraform output -json | jq -r '.master_public_ip.value + " ansible_user=ubuntu"' >> ./ansible/inventory
 echo -e "\n[workers]" >> ./ansible/inventory
-terraform output -json | jq -r .worker_instance_public_ips.value[] >> ./ansible/inventory
+terraform output -json | jq -r '.worker_instance_public_ips.value[] + " ansible_user=ubuntu"' >> ./ansible/inventory
 
 echo -e "\n" >> ./ansible/inventory
 cat <<EOT >> ./ansible/inventory
@@ -51,6 +51,9 @@ ansible_ssh_user=ubuntu
 ansible_ssh_private_key_file=$1
 EOT
 
+echo -e "Giving instances time to warm up...\n"
+sleep 10
+
 figlet provisioning...
 
 export ANSIBLE_CONFIG=./ansible/ansible.cfg
@@ -58,8 +61,11 @@ export ANSIBLE_CONFIG=./ansible/ansible.cfg
 ansible-playbook ./ansible/playbook.yml \
     --private-key $1 \
     --inventory-file ./ansible/inventory \
-    --forks 4 \
+    --forks 1 \
     --user ubuntu \
     --timeout 300
 
 figlet ready!
+
+echo -e "\n"
+terraform output
