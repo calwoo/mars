@@ -105,7 +105,7 @@ variable "key_name" {
 
 variable "max_workers" {
   type        = number
-  default     = 3
+  default     = 10
   description = "Max number of worker nodes to launch"
 }
 

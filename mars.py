@@ -30,7 +30,7 @@ Commands are as follows:
 
         with open(Path(__file__).parent.joinpath("terraform.tfvars"), "r") as f:
             for line in f:
-                entry = list(map(lambda x: x.strip(), line.split("=")))
+                entry = list(map(lambda x: x.strip().strip("\""), line.split("=")))
                 if len(entry) > 1:
                     self.tf_config[entry[0]] = entry[1]
 
@@ -63,7 +63,6 @@ Commands are as follows:
 
         filep = Path(__file__).parent.joinpath("scripts/create.sh")
         sp.run([filep, args.key, args.num_nodes, args.instance])
-
 
 
 if __name__ == "__main__":
