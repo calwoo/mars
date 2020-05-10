@@ -32,7 +32,10 @@ cd ..
 
 echo "Initializing EC2 cluster..."
 terraform init > /dev/null
-terraform apply -auto-approve
+terraform apply -auto-approve \
+    -var="key_file=$1" \
+    -var="n_workers=$2" \
+    -var="instance_type=$3"
 
 if ! [ -d "./artifacts/" ]; then
     echo "Created directory for terraform artifacts"
