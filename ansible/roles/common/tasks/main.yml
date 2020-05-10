@@ -6,6 +6,13 @@
 - name: Disable autoupdates
   script: disable_autoupdate.sh
 
+- name: Remove Canonical snapd
+  apt:
+    name: snapd
+    state: absent
+    purge: yes
+  become: yes
+
 - name: Update apt-cache
   apt:
     update_cache: yes

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+import subprocess as sp
 import sys
+import os
+from pathlib import Path
+
 
 class MarsCLI:
     """
@@ -14,10 +18,10 @@ class MarsCLI:
         parser = argparse.ArgumentParser(description="Mars cluster CLI tool", 
                                          usage="""mars <command> [<args>]
 
-        Commands are as follows:
-            create      Creates a Mars cluster of a specified configuration
-            connect     Opens an SSH connection to the master node
-            destroy     Teardown the cluster
+Commands are as follows:
+    create      Creates a Mars cluster of a specified configuration
+    connect     Opens an SSH connection to the master node
+    destroy     Teardown the cluster
         """)
         parser.add_argument("command", help="Command to use")
 
@@ -37,7 +41,9 @@ class MarsCLI:
         parser.add_argument("-t", "--type", default="dask", help="Configuration type of the cluster")
 
         args = parser.parse_args(self.command_arg)
-        print("test creating cluster!")
+        filep = Path(__file__).parent.joinpath("scripts/run.sh")
+       
+        sp.run([filep, args.key])
 
 
 

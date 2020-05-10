@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+### Set working directory of script to path where file exists
+scriptdir="$(dirname "$0")"
+cd "$scriptdir"
+
 figlet mars cluster
 
 ### Run script for an EC2 cluster (possible GPU-enabled). 
@@ -23,6 +27,8 @@ if ! [ -x "$(command -v terraform)" ]; then
     # Verify terraform install
     terraform version
 fi
+
+cd ..
 
 echo "Initializing EC2 cluster..."
 terraform init > /dev/null
